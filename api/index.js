@@ -133,6 +133,46 @@ app.get("/post/:id", async (req, res) => {
   const postDoc = await Post.findById(id).populate("author", ["username"]);
   res.json(postDoc);
 });
+
+// Delete a post by ID
+app.delete("/post/:id", async (req, res) => {
+  const { token } = req.cookies;
+  const { id } = req.params;
+
+  jwt.verify(token, secret, {}, async (err, info) => {
+    if (err) {
+      console.log(err)
+      return res.status(401).json("Unauthorized");
+    }
+
+    try {
+      console.log(id)
+      const postDoc = await Post.findById(id);
+
+      if (!postDoc) {
+        return res.status(404).json("Post not found");
+      }
+
+      if (JSON.stringify(postDoc.author) !== JSON.stringify(info.id)) {
+        return res.status(403).json("You are not the author of this post");
+      }
+
+      // Delete the post document from the database
+      await Post.deleteOne({_id:id});
+
+      // You can also delete the associated cover image if necessary
+      if (postDoc.cover) {
+        fs.unlinkSync(postDoc.cover);
+      }
+
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting post:", error);
+      res.status(500).json("Internal Server Error");
+    }
+  });
+});
+
 app.listen(5000);
 //mongodb+srv://Project:Qo6hDv9v9vNY6IcQ@cluster0.iuwyibh.mongodb.net/?retryWrites=true&w=majority
 //Qo6hDv9v9vNY6IcQ
