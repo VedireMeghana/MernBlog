@@ -33,7 +33,7 @@ export default function Header() {
 
   return (
     <header>
-      <Link to="/" className="logo">
+      <Link to="/index" className="logo">
         MYBLOG
       </Link>
       <nav>
